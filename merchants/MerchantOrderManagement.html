@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h3>Quản lý đơn hàng: </h3>
+        <p>Đây là khu vực để quản lý đơn hàng, để đến mục quản lý sản phẩm,<a href="ProductManagerment.html">hãy bấm vào đây</a></p>
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#home">Đơn hàng chờ xác nhận</a></li>
+            <li><a data-toggle="tab" href="#menu1">Đơn hàng đang được vận chuyển</a></li>
+            <li><a data-toggle="tab" href="#menu2">Các vật phẩm bị hủy</a></li>
+            <li><a data-toggle="tab" href="#menu3">Các đơn hàng đã xong hoàn toàn</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="home" class="tab-pane fade in active">
+                <h4>Các đơn đặt hàng đang chờ xác nhận:</h4>
+                <div id="myWaitingOrder" class="well"></div>
+            </div>
+            <div id="menu1" class="tab-pane fade">
+                <h4>Các đơn đặt hàng đã trên đường chuyển phát:</h4>
+                <div id="myShippingOrder" class="well"></div>
+            </div>
+            <div id="menu2" class="tab-pane fade">
+                <h4>Các món hàng bị khách hàng hủy:</h4>
+                <div id="myCanceledOrder" class="well"></div>
+            </div>
+            <div id="menu3" class="tab-pane fade">
+                <h4>Các đơn đặt hàng đã xong hoàn toàn:</h4>
+                <div id="myCompleteOrder" class="well"></div>
+                <h4>Lọc theo: </h4>
+                <div class="well">Tháng: <input type="number" width="150" id="filterMonth"> Năm: <input type="number" width="150" id="filterYear"> Tổng tiền nhỏ nhất: <input type="number" width="150" id="filterMinTotal"> Tổng tiền lớn nhất: <input type="number" width="150" id="filterMaxTotal"> <button id="filterButton">Lọc</button></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script type="text/javascript">
+        CheckMerchantRole();
+        function LoadWaitingOrders() {
+            $('#myWaitingOrder').empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/Orders/LoadAllMyMerchantOrdersAndOrderItemByState?stateToLoad=Waiting',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    response.reverse();
+                    $.each(response, function (index, val) {
+                        $('#myWaitingOrder').append('<div>Mã Hóa Đơn ID: ' + val.orderID + ' | Ngày đặt: ' + val.orderDate + ' | Tên khách hàng: ' + val.orderNameofUser + ' | Địa chỉ: ' + val.orderAddress + ' | Điện thoại: ' + val.orderPhoneNumber + ' | Tổng tiền: ' + val.orderTotalPrice + '</div>');
+                        $.each(val.orderItemIDs, function (index, val2) {
+                            $('#myWaitingOrder').append('<div>____Mã món hàng chi tiết: ' + val2.orderItemID + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + val2.productName + '</a> | Số lượng: ' + val2.orderItemQuantity + ' | Thành tiền: ' + val2.orderItemPrice + ' | Trạng thái: ' + val2.orderItemState + (val2.orderItemState == "Waiting" ? "| <a href='#' onclick='SwitchAnOrderToShipping(" + val2.orderItemID + ")'>Xác nhận</a>" : "" + '</div>'));
+                        })
+                        $('#myWaitingOrder').append('<br>');
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadShippingOrders() {
+            $('#myShippingOrder').empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/Orders/LoadAllMyMerchantOrdersAndOrderItemByState?stateToLoad=Shipping',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    response.reverse();
+                    $.each(response, function (index, val) {
+                        $('#myShippingOrder').append('<div>Mã Hóa Đơn ID: ' + val.orderID + ' | Ngày đặt: ' + val.orderDate + ' | Tên khách hàng: ' + val.orderNameofUser + ' | Địa chỉ: ' + val.orderAddress + ' | Điện thoại: ' + val.orderPhoneNumber + ' | Tổng tiền: ' + val.orderTotalPrice + '</div>');
+                        $.each(val.orderItemIDs, function (index, val2) {
+                            $('#myShippingOrder').append('<div>____Mã món hàng chi tiết: ' + val2.orderItemID + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + val2.productName + '</a> | Số lượng: ' + val2.orderItemQuantity + ' | Thành tiền: ' + val2.orderItemPrice + ' | Trạng thái: ' + val2.orderItemState + (val2.orderItemState == "Shipping" ? "| <a href='#' onclick='SwitchAnOrderToDone(" + val2.orderItemID + ")'>Hoàn thành</a>" : "" + '</div>'));
+                        })
+                        $('#myShippingOrder').append('<br>');
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadCanceledOrders() {
+            $('#myCanceledOrder').empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/Orders/LoadAllMyMerchantOrdersAndOrderItemByState?stateToLoad=Canceled',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    response.reverse();
+                    $.each(response, function (index, val) {
+                        $('#myCanceledOrder').append('<div>Mã Hóa Đơn ID: ' + val.orderID + ' | Ngày đặt: ' + val.orderDate + ' | Tên khách hàng: ' + val.orderNameofUser + ' | Địa chỉ: ' + val.orderAddress + ' | Điện thoại: ' + val.orderPhoneNumber + ' | Tổng tiền: ' + val.orderTotalPrice + '</div>');
+                        $.each(val.orderItemIDs, function (index, val2) {
+                            $('#myCanceledOrder').append('<div>____Mã món hàng chi tiết: ' + val2.orderItemID + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + val2.productName + '</a> | Số lượng: ' + val2.orderItemQuantity + ' | Thành tiền: ' + val2.orderItemPrice + ' | Trạng thái: ' + val2.orderItemState + '</div>');
+                        })
+                        $('#myCanceledOrder').append('<br>');
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadCompletedOrders() {
+            $('#myCompleteOrder').empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/Orders/LoadAllMyMerchantCompleteOrders',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    response.reverse();
+                    $.each(response, function (index, val) {
+                        $('#myCompleteOrder').append('<div>Mã Hóa Đơn ID: ' + val.orderID + ' | Ngày đặt: ' + val.orderDate + ' | Tên khách hàng: ' + val.orderNameofUser + ' | Địa chỉ: ' + val.orderAddress + ' | Điện thoại: ' + val.orderPhoneNumber + ' | Tổng tiền: ' + val.orderTotalPrice + '</div>');
+                        $.each(val.orderItemIDs, function (index, val2) {
+                            $('#myCompleteOrder').append('<div>____Mã món hàng chi tiết: ' + val2.orderItemID + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + val2.productName + '</a> | Số lượng: ' + val2.orderItemQuantity + ' | Thành tiền: ' + val2.orderItemPrice + ' | Trạng thái: ' + val2.orderItemState + '</div>');
+                        })
+                        $('#myCompleteOrder').append('<br>');
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function CancelanOrder(orderItemID) {
+            $.ajax({
+                url: 'http://localhost:25225/api/OrderItems/SetToCanceled?oid=' + orderItemID,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    alert(response);
+                    LoadWaitingOrders();
+                    LoadShippingOrders();
+                    LoadCanceledOrders();
+                    LoadCompletedOrders();
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function SwitchAnOrderToShipping(orderItemID) {
+            $.ajax({
+                url: 'http://localhost:25225/api/OrderItems/SetToShipping?oid=' + orderItemID,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    alert(response);
+                    LoadWaitingOrders();
+                    LoadShippingOrders();
+                    LoadCanceledOrders();
+                    LoadCompletedOrders();
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function SwitchAnOrderToDone(orderItemID) {
+            $.ajax({
+                url: 'http://localhost:25225/api/OrderItems/SetToDone?oid=' + orderItemID,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+                success: function (response) {
+                    alert(response);
+                    LoadWaitingOrders();
+                    LoadShippingOrders();
+                    LoadCanceledOrders();
+                    LoadCompletedOrders();
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function CheckMerchantRole() {
+            $.ajax({
+                url: 'http://localhost:25225/api/Account/AmIinole?role=Merchant',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    if (response == false) {
+                        document.write("Bạn không có quyền Merchant");
+                    }
+                },
+                // Display errors if any in the Bootstrap alert <div>
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                    //if (response == false) {
+                    //    document.write("Có lỗi xảy ra");
+                    //}
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            LoadWaitingOrders();
+            LoadShippingOrders();
+            LoadCanceledOrders();
+            LoadCompletedOrders();
+
+            $('#filterButton').click(function () {
+                $('#myCompleteOrder').empty();
+                var additionParametter = "?";
+                if ($('#filterMonth').val() != null)
+                {
+                    additionParametter = additionParametter + "month=" + $('#filterMonth').val();
+                }
+
+                if ($('#filterYear').val() != null) {
+                    additionParametter = additionParametter + "&year=" + $('#filterYear').val();
+                }
+
+                if ($('#filterMinTotal').val() != null) {
+                    additionParametter = additionParametter + "&minTotalPrice=" + $('#filterMinTotal').val();
+                }
+
+                if ($('#filterMaxTotal').val() != null) {
+                    additionParametter = additionParametter + "&maxTotalPrice=" + $('#filterMaxTotal').val();
+                }
+
+                $.ajax({
+                    url: 'http://localhost:25225/api/Orders/LoadAllMyMerchantCompleteOrders' + additionParametter,
+                    method: 'GET',
+                    contentType: 'application/json',
+                    headers: {
+                        'Authorization': 'Bearer '
+                            + localStorage.accessToken
+                    },
+                    success: function (response) {
+                        response.reverse();
+                        $.each(response, function (index, val) {
+                            $('#myCompleteOrder').append('<div>Mã Hóa Đơn ID: ' + val.orderID + ' | Ngày đặt: ' + val.orderDate + ' | Tên khách hàng: ' + val.orderNameofUser + ' | Địa chỉ: ' + val.orderAddress + ' | Điện thoại: ' + val.orderPhoneNumber + ' | Tổng tiền: ' + val.orderTotalPrice + '</div>');
+                            $.each(val.orderItemIDs, function (index, val2) {
+                                $('#myCompleteOrder').append('<div>____Mã món hàng chi tiết: ' + val2.orderItemID + '| Tên món hàng:  <a href="ViewProduct.html?pid=' + val2.itemID + '">' + val2.productName + '</a> | Số lượng: ' + val2.orderItemQuantity + ' | Thành tiền: ' + val2.orderItemPrice + ' | Trạng thái: ' + val2.orderItemState + '</div>');
+                            })
+                            $('#myCompleteOrder').append('<br>');
+                        });
+                    },
+                    error: function (jqXHR) {
+                        alert(jqXHR.responseText);
+                    }
+                });
+            })
+        });
+    </script>
+</body>
+</html>

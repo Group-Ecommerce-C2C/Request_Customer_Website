@@ -1,0 +1,324 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Quản lý sản phẩm</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h3>Quản lý sản phẩm</h3>
+        <p> Đây là phần cho người bán quản lý các sản phẩm của mình, quản lý các sản phẩm đang được đăng vip và các chừng từ liên quan đến mua bán tin vip. <a href="MerchantOrderManagement.html">Để xem mục quản lý đơn hàng, hãy bấm vào đây</a></p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" href="#home">Danh sách sản phẩm</a></li>
+        <li><a data-toggle="tab" href="#menu1">Danh sách đang đăng vip</a></li>
+        <li><a data-toggle="tab" href="#menu2">Thống kê chứng từ mua vip</a></li>
+        <!--<li><a data-toggle="tab" href="#menu3">Menu 3</a></li>-->
+    </ul>
+
+    <div class="tab-content">
+        <div id="home" class="tab-pane fade in active">
+            <h3>Danh sách sản phẩm của bạn:</h3>
+            <div class="well">
+                <ul id="productList"></ul><br>
+            </div>
+            <a href="CreateProduct.html">Tạo sản phẩm mới</a>
+        </div>
+        <div id="menu1" class="tab-pane fade">
+            <h3>Danh sách sản phẩm đang đăng kí vip:</h3>
+            <div class="well">
+                <ul id="VIPproductList"></ul>
+            </div>
+            <div class="well">
+                Số tin vip còn lại của bạn: <span id="SoTinConLaiSpan"></span>
+            </div>
+            <a href="PurchaseVIPNews.html">Mua thêm tin VIP</a>
+        </div>
+        <div id="menu2" class="tab-pane fade">
+            <h3>Chứng từ mua tin vip:</h3>
+            <div class="well">
+                <table id="invoiceList" class="table"></table>
+                Tháng:
+                <select id="filterMonth">
+                    <option selected value="">Chọn</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+                Năm:
+                <select id="filterYear">
+                    <option selected value="">Chọn</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                </select>
+                <button id="filterButton" class="button">Lọc</button>
+            </div>
+            <div class="well">Tổng số tin được mua: <span id="tongsoluongSpan"></span>, Tổng số tiền đã trả: <span id="tongdoanhthuSpan"></span></div>
+        </div>
+        <!--<div id="menu3" class="tab-pane fade">
+            <h3>Menu 3</h3>
+            <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+        </div>-->
+    </div>
+    <div class="col-md-10 col-md-offset-1">
+        <!--<div class="well">
+            Danh sách sản phẩm của bạn:
+            <ul id="productList"></ul><br>
+        </div>-->
+        <!--<div class="well">
+            Danh sách sản phẩm đã đăng kí vip
+            <ul id="VIPproductList"></ul>
+        </div>-->
+        <!--<div class="well">
+            Số tin vip còn lại của bạn: <span id="SoTinConLaiSpan"></span>
+        </div>-->
+        <!--Chứng từ mua tip vip
+        <div class="well">
+            <table id="invoiceList" class="table"></table>
+            Tháng:
+            <select id="filterMonth">
+                <option selected value="">Chọn</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+            </select>
+            Năm:
+            <select id="filterYear">
+                <option selected value="">Chọn</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+            </select>
+            <button id="filterButton" class="button">Lọc</button>
+        </div>
+        <div class="well">Tổng số tin được mua: <span id="tongsoluongSpan"></span>, Tổng số doanh thu: <span id="tongdoanhthuSpan"></span></div>-->
+    </div>
+
+
+    <script type="text/javascript">
+        CheckMerchantRole();
+        var additionParametter = "";
+        $(document).ready(function () {
+            LoadAllProduct();
+            LoadAllPromotedProduct();
+            LoadSoTinConLai();
+            LoadVipNewInvoice();
+            $('#filterButton').click(function () {
+                $('#invoiceList').empty();
+                additionParametter = "?";
+                if ($('#filterMonth').val() != null) {
+                    additionParametter = additionParametter + "month=" + $('#filterMonth').val();
+                }
+
+                if ($('#filterYear').val() != null) {
+                    additionParametter = additionParametter + "&year=" + $('#filterYear').val();
+                }
+                LoadVipNewInvoice();
+            });
+            $('#dangxuatButton').click(function () {
+                window.localStorage.removeItem("accessToken");
+                window.location.href = "Login.html"
+            })
+        });
+
+        function PromoteProduct(idofProducttoPromote) {
+            $.ajax({
+                url: 'http://localhost:25225/api/SponsoredItem/Additem?productID=' + idofProducttoPromote,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    alert("Bạn đã đăng thành công sản phẩm này thành tin vip");
+                    LoadAllProduct();
+                    LoadAllPromotedProduct();
+                    LoadSoTinConLai();
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadSoTinConLai() {
+            $.ajax({
+                url: 'http://localhost:25225/api/UserInfos/LoadSoLuongTinVipConLai',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    $('#SoTinConLaiSpan').html(response);
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadVipNewInvoice() {
+            $.ajax({
+                url: 'http://localhost:25225/api/SponsoredNewsOrders/LoadAllMyNewsOrders' + additionParametter,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    $('#invoiceList').append('<tr><th>ID</th><th>UserName</th><th>Số lượng</th><th>Tổng tiền</th><th>Ngày</th></tr>');
+                    $.each(response, function (index, val) {
+                        $('#invoiceList').append('<tr>' + '<td>' + val.SponsoredNewsOrderID + '</td>' + '<td>' + val.userName + '</td>' + '<td>' + val.Quantity + '</td>' + '<td>' + val.SumPrice + '</td>' + '<td>' + val.SponsoredNewsOrderDate + '</td>' + '</tr>');
+
+                    });
+                },
+                
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+            $.ajax({
+                url: 'http://localhost:25225/api/SponsoredNewsOrders/MySponsoredNewsAnalysis' + additionParametter,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    $('#tongsoluongSpan').html(response.sumquantity);
+                    $('#tongdoanhthuSpan').html(response.sumPrice);
+                },
+                // Display errors if any in the Bootstrap alert <div>
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function ExtendPromoteProduct(idofProducttoPromote) {
+            $.ajax({
+                url: 'http://localhost:25225/api/SponsoredItem/ExtendTime?SponsoredItemID=' + idofProducttoPromote,
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    alert(response);
+                    LoadAllPromotedProduct();
+                    LoadSoTinConLai();
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function LoadAllProduct() {
+            var productList = $('#productList');
+            productList.empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/Products/LoadAllMyProducts',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    $.each(response, function (index, val) {
+                        productList.append('<li><a href="viewProduct.html?pid='+ val.ProductID+'">' + val.ProductName + '</a> <a href="http://localhost:33733/EditProduct.html?pid=' + val.ProductID + '"> | Edit</a> <a href="#" onclick="PromoteProduct(' + val.ProductID + ')"> | Promote</a></li>')
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+
+        function CheckMerchantRole() {
+            $.ajax({
+                url: 'http://localhost:25225/api/Account/AmIinole?role=Merchant',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    if (response == false) {
+                        document.write("Bạn không có quyền Merchant");
+                    }
+                },
+                // Display errors if any in the Bootstrap alert <div>
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                    //if (response == false) {
+                    //    document.write("Có lỗi xảy ra");
+                    //}
+                }
+            });
+        }
+
+        function LoadAllPromotedProduct() {
+            var VIPproductList = $('#VIPproductList');
+            VIPproductList.empty();
+            $.ajax({
+                url: 'http://localhost:25225/api/SponsoredItems/LoadAllMySponsored',
+                method: 'GET',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer '
+                        + localStorage.accessToken
+                },
+
+                success: function (response) {
+                    $.each(response, function (index, val) {
+                        VIPproductList.append('<li>' + val.productName + ' | Ngày bắt đầu: ' + val.startDate + ' | Ngày kết thúc:' + val.endDate + '<a href="#" onclick="ExtendPromoteProduct(' + val.sponsoredItemID + ')"> Gia hạn</a>' + '</li>');
+                    });
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.responseText);
+                }
+            });
+        }
+        
+    </script>
+        <div style='float: right;'><button id="dangxuatButton" class="button small">Đăng xuất Admin</button></div>
+ </div>
+</body>
+</html>

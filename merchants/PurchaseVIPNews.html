@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Mua tin vip</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://www.paypalobjects.com/api/checkout.js"></script>
+</head>
+<body style="padding-top:20px">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="well">
+            <!--Table to capture username and password-->
+            <h4>Nhập số tiền bạn muốn mua: </h4>
+            <input id="newsQuantity" type="number" value="" />
+            <div>
+                <p>Giá 50.000đ mỗi tin</p>
+                <p>Thành tiền: <span id="sotienSpan"></span></p>
+            </div>
+            <div id="paypal-button-container"></div>
+            <script>
+        paypal.Button.render({
+
+            env: 'sandbox', // sandbox | production
+
+            // PayPal Client IDs - replace with your own
+            // Create a PayPal app: https://developer.paypal.com/developer/applications/create
+            client: {
+                sandbox: 'AWqTlA7qZGCA-cr5ehm0mnicdSRKK-Ug-C_mo8fBY4d0ggul5slgPK59GSFgt2uA8UH82LEASD7W8KpB',
+                production: 'AWqTlA7qZGCA-cr5ehm0mnicdSRKK-Ug-C_mo8fBY4d0ggul5slgPK59GSFgt2uA8UH82LEASD7W8KpB'
+            },
+
+            // Show the buyer a 'Pay Now' button in the checkout flow
+            commit: true,
+
+            // payment() is called when the button is clicked
+            payment: function(data, actions) {
+
+                // Make a call to the REST api to create the payment
+                return actions.payment.create({
+                    payment: {
+                        transactions: [
+                            {
+                                amount: { total: 2 * document.getElementById('newsQuantity').value, currency: 'USD' }
+                            }
+                        ]
+                    }
+                });
+            },
+
+            // onAuthorize() is called when the buyer approves the payment
+            onAuthorize: function(data, actions) {
+
+                // Make a call to the REST api to execute the payment
+                return actions.payment.execute().then(function() {
+                    window.alert('Payment Complete!');
+                    $.ajax({
+                        // Post username, password & the grant type to /token
+                        url: 'http://localhost:25225/api/SponsoredNewsOrders/PurchaseVipNews?quantity=' + document.getElementById('newsQuantity').value,
+                        method: 'GET',
+                        contentType: 'application/json',
+                        headers: {
+                            'Authorization': 'Bearer '
+                                + localStorage.accessToken
+                        },
+                        // When the request completes successfully, save the
+                        // access token in the browser session storage and
+                        // redirect the user to Data.html page. We do not have
+                        // this page yet. So please add it to the
+                        // EmployeeService project before running it
+                        success: function (response) {
+                            alert("Mua thành công");
+                            window.location.href = "ProductManagerment.html";
+                        },
+                        // Display errors if any in the Bootstrap alert <div>
+                        error: function (jqXHR) {
+                            $('#divErrorText').text(jqXHR.responseText);
+                            $('#divError').show('fade');
+                        }
+                    });
+                });
+            }
+
+        }, '#paypal-button-container');
+
+            </script>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('#newsQuantity').change(function () {
+                var sotienmoi = $('#newsQuantity').val();
+                sotienmoi = sotienmoi * 50000;
+                document.getElementById("sotienSpan").innerHTML = sotienmoi;
+            });
+
+            $('#linkClose').click(function () {
+                $('#divError').hide('fade');
+            });
+
+            $('#btnLogin').click(function () {
+                $.ajax({
+                    // Post username, password & the grant type to /token
+                    url: 'http://localhost:25225/token',
+                    method: 'POST',
+                    contentType: 'application/x-www-form-urlencoded',
+                    //headers: {
+                    //    'Authorization': 'Bearer '
+                    //        + 'Fz9Xp2DR7xLCEl8aiGUc-fuZZNSyMyBqZeoJs1GjdAzXsNIEhkh45MK7_wu5R9w9cRmpqQ-zSi9uf8_pPAW-bye_2VagLOly9rVnzbyoUCrWsZHiWN7IJ4a0CDWA2ZUPYi48zN3FSiG9QOYAyM9PaUDS8ugEv8XJw12QDdemNdZRnpgRpZgAxqfVUjpX-tvxznkHJVtbNz8MIviZFOyL_1aDFxygyevwce_chk2D8ifES5egKs9h-BmP58MGu6iBhnGksLovVdfsvRbqRyL42ebHb_E2A8ONTWEyoM39PsRxPawgkyhEjdG9_C8y0u-u-4e9H8ratOnqKLiXEMvZMsRZc_153Uhyk4wFb6Ty3UK6diBlE_dJSa74HigbC5twiiw3UkoUs7qdhEdGCb2uo2Wf1iP26GLo_8Pq1R5fdHEeOd-X-f-JMM4HMqic-QI6T8ZgxJ5yTPFYTZeparqLYtKEtvWvUb4jE7TH0aZVVl4HSmC6gYCxRbnLAqNcIoQbGnpEa2zCrogYlIzWD0rf_qnOfY9JEOwUDdsx0zNMxrw'
+                    //},
+                    data: {
+                        username: $('#txtUsername').val(),
+                        password: $('#txtPassword').val(),
+                        grant_type: 'password'
+                    },
+
+                    success: function (response) {
+                        sessionStorage.setItem("accessToken", response.access_token);
+                        alert(sessionStorage.accessToken);
+                    },
+                    // Display errors if any in the Bootstrap alert <div>
+                    error: function (jqXHR) {
+                        $('#divErrorText').text(jqXHR.responseText);
+                        $('#divError').show('fade');
+                    }
+                });
+            });
+
+            $('#btnCheckAc').click(function () {
+                $.ajax({
+                    // Post username, password & the grant type to /token
+                    url: 'http://localhost:25225/api/Account/AmIActivated',
+                    method: 'GET',
+                    contentType: 'application/x-www-form-urlencoded',
+                    headers: {
+                        'Authorization': 'Bearer '
+                            + sessionStorage.accessToken
+                    },
+                    data: {
+                        username: $('#txtUsername').val(),
+                        password: $('#txtPassword').val(),
+                        grant_type: 'password'
+                    },
+                    // When the request completes successfully, save the
+                    // access token in the browser session storage and
+                    // redirect the user to Data.html page. We do not have
+                    // this page yet. So please add it to the
+                    // EmployeeService project before running it
+                    success: function (response) {
+                        alert(response.Message);
+                    },
+                    // Display errors if any in the Bootstrap alert <div>
+                    error: function (jqXHR) {
+                        $('#divErrorText').text(jqXHR.responseText);
+                        $('#divError').show('fade');
+                    }
+                });
+            });
+
+
+        });
+    </script>
+</body>
+</html>5
